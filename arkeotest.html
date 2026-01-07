@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ARKEO — Plan d’exécution (Terrain → Sponsor 50k → Pilote → LOI)</title>
+<style>
+:root{--bg:#0b1220;--panel:#101a2e;--text:#e8eefc;--muted:#a9b7d6;--accent:#7aa2ff;--ok:#7ef0c2;--warn:#ffcd6b;--bad:#ff6b8a;--line:rgba(255,255,255,.08);--shadow:0 10px 30px rgba(0,0,0,.35);--r:18px;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);color:var(--text);background:radial-gradient(1200px 800px at 20% -10%,rgba(122,162,255,.25),transparent 55%),radial-gradient(900px 700px at 110% 10%,rgba(126,240,194,.12),transparent 50%),linear-gradient(180deg,#070b14,var(--bg));}
+header{position:sticky;top:0;z-index:10;backdrop-filter:blur(14px);background:rgba(11,18,32,.75);border-bottom:1px solid var(--line);}
+.wrap{max-width:1200px;margin:0 auto;padding:18px 18px 28px}
+.top{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:14px 0;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(122,162,255,.95),rgba(126,240,194,.85));box-shadow:var(--shadow)}
+h1{font-size:18px;margin:0}
+.sub{color:var(--muted);font-size:12px;margin-top:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:9px 12px;border-radius:12px;cursor:pointer;font-weight:700}
+button:hover{border-color:rgba(122,162,255,.5);background:rgba(255,255,255,.08)}
+button.primary{background:rgba(122,162,255,.18);border-color:rgba(122,162,255,.35)}
+button.good{background:rgba(126,240,194,.14);border-color:rgba(126,240,194,.3)}
+button.warn{background:rgba(255,205,107,.12);border-color:rgba(255,205,107,.25)}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,rgba(16,26,46,.92),rgba(16,26,46,.72));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03);gap:12px;flex-wrap:wrap}
+.bd{padding:16px}
+.section-title{font-weight:900;font-size:14px;margin:0}
+.tiny{font-size:12px;color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.field{flex:1;min-width:180px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px;outline:none}
+textarea{min-height:90px;resize:vertical}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:rgba(255,255,255,.03)}
+.pill.ok{border-color:rgba(126,240,194,.35);background:rgba(126,240,194,.12)}
+.pill.warn{border-color:rgba(255,205,107,.35);background:rgba(255,205,107,.12)}
+.pill.bad{border-color:rgba(255,107,138,.35);background:rgba(255,107,138,.12)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+.kpi .label{color:var(--muted);font-size:12px}
+.kpi .value{font-size:18px;font-weight:900;margin-top:6px}
+.table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02)}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+.table th{color:var(--muted);font-weight:900;text-align:left;background:rgba(255,255,255,.03);position:sticky;top:0}
+.table tr:last-child td{border-bottom:none}
+.mono{font-family:var(--mono)}
+.btnlink{font-size:12px;font-weight:900;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.02);cursor:pointer}
+.btnlink:hover{border-color:rgba(122,162,255,.55)}
+.calendar{display:flex;flex-direction:column;gap:18px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.dow{color:var(--muted);font-size:12px;font-weight:900;text-align:center;padding:6px 0}
+.day{border:1px solid var(--line);border-radius:14px;padding:10px;min-height:88px;background:rgba(255,255,255,.02)}
+.day.out{opacity:.45}
+.daynum{font-weight:900;font-size:12px;color:var(--muted)}
+.event{margin-top:8px;font-size:12px;line-height:1.2;padding:6px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dot{width:8px;height:8px;border-radius:999px;display:inline-block;margin-right:6px}
+.template{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02);padding:12px}
+.template pre{margin:10px 0 0;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);overflow:auto;font-size:12px;line-height:1.45;white-space:pre-wrap}
+.footer{margin:24px 0 10px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.toast{position:fixed;right:16px;bottom:16px;background:rgba(16,26,46,.95);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow);color:var(--text);font-size:13px;display:none;max-width:340px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>ARKEO — Plan d’exécution</h1>
+        <div class="sub">Terrain → Sponsor 50k → Contrat → Hardening (8 semaines) → Pilote in-site → Rapport → LOI phase 2</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="btnAdd">+ Ajouter une tâche</button>
+      <button id="btnExport">Exporter (.json)</button>
+      <button id="btnImport">Importer</button>
+      <button class="warn" id="btnReset">Réinitialiser</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <div class="hd">
+      <div>
+        <div class="section-title">Paramètres</div>
+        <div class="tiny">Sauvegarde automatique dans le navigateur (localStorage). Exportez pour partager.</div>
+      </div>
+      <span class="pill ok" id="pill">Plan prêt</span>
+    </div>
+    <div class="bd">
+      <div class="row">
+        <div class="field"><label>Date de départ (J0)</label><input type="date" id="startDate"></div>
+        <div class="field"><label>Objectif cash</label><input id="targetCash" value="50 000 €"></div>
+        <div class="field"><label>Zone pilote</label><input id="pilotRegion" value="Catalogne (Barcelone si possible)"></div>
+        <div class="field"><label>Opérateur in-site</label><input id="onsiteOwner" value="Thomas (CTO) — full in-site"></div>
+      </div>
+      <div style="margin-top:14px" class="kpis">
+        <div class="kpi"><div class="label">Étape</div><div class="value" id="kStage">Terrain → Email OK</div><div class="tiny">Le verrou qui rend le programme “réel”.</div></div>
+        <div class="kpi"><div class="label">Sponsors</div><div class="value">2–3 max</div><div class="tiny">Peu, ciblés, 2 relances max.</div></div>
+        <div class="kpi"><div class="label">Hardening</div><div class="value">8 semaines</div><div class="tiny">Jalons S4 et S7.</div></div>
+        <div class="kpi"><div class="label">Pilote</div><div class="value">2–3 semaines</div><div class="tiny">KPIs simples + rapport.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="section-title">Tâches</div>
+          <div class="tiny">Filtrez, éditez, cochez. Les échéances apparaissent dans le calendrier.</div>
+        </div>
+        <div class="row">
+          <div class="field" style="min-width:160px"><label>Statut</label>
+            <select id="fStatus">
+              <option value="all">Tous</option><option value="todo">À faire</option><option value="doing">En cours</option><option value="blocked">Bloqué</option><option value="done">Fait</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:160px"><label>Type</label>
+            <select id="fType">
+              <option value="all">Tous</option>
+              <option value="terrain">Terrain</option><option value="pack">Docs/Pack</option><option value="sponsor">Sponsor</option>
+              <option value="contract">Contrat</option><option value="build">Hardening</option><option value="pilot">Pilote</option>
+              <option value="report">Rapport</option><option value="loi">LOI phase 2</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="bd" style="padding:0">
+        <div style="overflow:auto;max-height:580px">
+          <table class="table">
+            <thead><tr>
+              <th style="min-width:280px">Tâche</th>
+              <th style="min-width:120px">Type</th>
+              <th style="min-width:120px">Owner</th>
+              <th style="min-width:120px">Échéance</th>
+              <th style="min-width:110px">Statut</th>
+              <th style="min-width:220px">Notes</th>
+              <th style="min-width:120px;text-align:right">Actions</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="calendar">
+      <div class="card">
+        <div class="hd">
+          <div>
+            <div class="section-title">Calendrier</div>
+            <div class="tiny">Jalons & échéances (cliquez sur une tâche pour éditer).</div>
+          </div>
+          <div class="cal-head">
+            <button class="btnlink" id="prev">◀</button>
+            <div class="mono" id="calLabel" style="font-weight:900"></div>
+            <button class="btnlink" id="next">▶</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="cal-grid" id="dow"></div>
+          <div class="cal-grid" id="cal"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><div><div class="section-title">Pitchs & templates</div><div class="tiny">Copier-coller, ton court, 1 CTA.</div></div></div>
+        <div class="bd" style="display:grid;gap:12px">
+          <div class="template">
+            <span class="pill ok">Pitch — Terrain (6 phrases)</span>
+            <pre id="tplTerrain"></pre>
+            <button class="btnlink" data-copy="#tplTerrain">Copier</button>
+          </div>
+          <div class="template">
+            <span class="pill ok">Pitch — Sponsor (6 phrases)</span>
+            <pre id="tplSponsor"></pre>
+            <button class="btnlink" data-copy="#tplSponsor">Copier</button>
+          </div>
+          <div class="template">
+            <span class="pill warn">Email — Confirmation terrain</span>
+            <pre id="tplEmail"></pre>
+            <button class="btnlink" data-copy="#tplEmail">Copier</button>
+          </div>
+          <div class="template">
+            <span class="pill warn">CTA sponsor (30 min)</span>
+            <pre id="tplCTA"></pre>
+            <button class="btnlink" data-copy="#tplCTA">Copier</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>💾 localStorage · Export/Import JSON · Modifiable</div>
+    <div class="mono">arkeoplan-v1</div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal -->
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);">
+  <div style="max-width:780px;margin:6vh auto;padding:0 16px;">
+    <div class="card" style="border-radius:22px;">
+      <div class="hd">
+        <div><div class="section-title" id="mTitleLbl">Nouvelle tâche</div><div class="tiny">Éditez puis enregistrez.</div></div>
+        <button class="btnlink" id="mClose">✕</button>
+      </div>
+      <div class="bd">
+        <div class="row">
+          <div class="field" style="flex:2"><label>Titre</label><input id="mTitle" placeholder="Ex: Obtenir email terrain (site + référent + dates + beta accepté)"></div>
+          <div class="field"><label>Type</label>
+            <select id="mType">
+              <option value="terrain">Terrain</option><option value="pack">Docs/Pack</option><option value="sponsor">Sponsor</option>
+              <option value="contract">Contrat</option><option value="build">Hardening</option><option value="pilot">Pilote</option>
+              <option value="report">Rapport</option><option value="loi">LOI phase 2</option>
+            </select>
+          </div>
+          <div class="field"><label>Owner</label><input id="mOwner" placeholder="Erwan / Thomas / ..."></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="field"><label>Échéance</label><input type="date" id="mDue"></div>
+          <div class="field"><label>Statut</label>
+            <select id="mStatus"><option value="todo">À faire</option><option value="doing">En cours</option><option value="blocked">Bloqué</option><option value="done">Fait</option></select>
+          </div>
+          <div class="field"><label>Priorité</label>
+            <select id="mPr"><option value="p1">P1 (critique)</option><option value="p2">P2</option><option value="p3">P3</option></select>
+          </div>
+        </div>
+        <div style="margin-top:10px"><label>Notes</label><textarea id="mNotes" placeholder="Contexte, liens, décisions, next step..."></textarea></div>
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <div class="tiny">Astuce : collez ici l’email terrain ou les exigences sponsor.</div>
+          <div style="display:flex;gap:10px">
+            <button class="btnlink" id="mDelete" style="display:none">Supprimer</button>
+            <button class="good" id="mSave">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY="arkeoplan_v1";
+const TYPE={terrain:{l:"Terrain",c:"#7aa2ff"},pack:{l:"Docs/Pack",c:"#7ef0c2"},sponsor:{l:"Sponsor",c:"#ffcd6b"},contract:{l:"Contrat",c:"#7aa2ff"},build:{l:"Hardening",c:"#7ef0c2"},pilot:{l:"Pilote",c:"#ffcd6b"},report:{l:"Rapport",c:"#7aa2ff"},loi:{l:"LOI",c:"#7ef0c2"}};
+let S={startDate:null,targetCash:"50 000 €",pilotRegion:"Catalogne (Barcelone si possible)",onsiteOwner:"Thomas (CTO) — full in-site",tasks:[],calMonth:null};
+
+const uid=()=>Math.random().toString(16).slice(2)+Math.random().toString(16).slice(2);
+const addDays=(iso,days)=>{const d=new Date(iso+"T00:00:00");d.setDate(d.getDate()+days);return d.toISOString().slice(0,10);}
+const esc=s=>(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+const shorten=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";clearTimeout(window.__t);window.__t=setTimeout(()=>t.style.display="none",2200);}
+function nextMondayISO(){const d=new Date();const day=d.getDay();const diff=(8-day)%7||7;d.setDate(d.getDate()+diff);d.setHours(0,0,0,0);return d.toISOString().slice(0,10);}
+
+function defaultTasks(start){
+  return [
+    {id:uid(),title:"Obtenir email terrain (site + référent + dates + 'beta accepté') via Siel Bleu",type:"terrain",owner:"Erwan / Siel Bleu",due:addDays(start,3),status:"todo",pr:"p1",notes:"Sortie: email 'OK' du site. Sans ça, pas de sponsoring efficace."},
+    {id:uid(),title:"Plan B terrain discret (1 site alternatif en Catalogne)",type:"terrain",owner:"Erwan",due:addDays(start,7),status:"todo",pr:"p2",notes:"Ne pas dépendre d’un seul contact."},
+    {id:uid(),title:"Finaliser pack sponsor-ready (Programme 50k + Budget 8 lignes + Fiche pilote)",type:"pack",owner:"Erwan",due:addDays(start,6),status:"todo",pr:"p1",notes:"Ajouter: Go/No-Go, baseline privacy/safety (5 items), plan reprise <72h."},
+    {id:uid(),title:"Lister pièces critiques + coûts/délais + spare kit minimum (continuité)",type:"pack",owner:"Thomas (CTO)",due:addDays(start,6),status:"todo",pr:"p1",notes:"But: éviter qu’une casse stoppe le pilote."},
+    {id:uid(),title:"Sélectionner 2–3 fondations max + trouver contact direct",type:"sponsor",owner:"Erwan",due:addDays(start,8),status:"todo",pr:"p1",notes:"Process réaliste, thématique vieillissement/autonomie/inclusion."},
+    {id:uid(),title:"Outreach sponsor (CTA 30 min) avec site confirmé + pack",type:"sponsor",owner:"Erwan",due:addDays(start,10),status:"todo",pr:"p1",notes:"Ton court, factuel, beta assumé. Relances J+10/J+20 max."},
+    {id:uid(),title:"Signer contrat programme sponsorisé (min 40–50% upfront)",type:"contract",owner:"Erwan",due:addDays(start,25),status:"todo",pr:"p1",notes:"Inclure: statut beta, limites, confidentialité, données anonymisées, paiement."},
+    {id:uid(),title:"Hardening MVP pilotable — jalon S4 (démo pilotable contrôlée)",type:"build",owner:"Thomas (CTO)",due:addDays(start,28),status:"todo",pr:"p1",notes:"Stabilité + instrumentation."},
+    {id:uid(),title:"Hardening MVP pilotable — jalon S7 (ready-for-site + plan reprise)",type:"build",owner:"Thomas (CTO)",due:addDays(start,49),status:"todo",pr:"p1",notes:"Baseline privacy/safety + continuité (spares, reprise)."},
+    {id:uid(),title:"Pilote in-site Catalogne (2–3 semaines) — exécution + journal incidents",type:"pilot",owner:"Thomas (CTO)",due:addDays(start,70),status:"todo",pr:"p1",notes:"KPIs sponsor: acceptabilité, valeur perçue, incidents/temps de reprise."},
+    {id:uid(),title:"Rapport final (≤3 pages) + restitution site & sponsor",type:"report",owner:"Erwan",due:addDays(start,78),status:"todo",pr:"p1",notes:"Résumé exécutif + résultats + limites + conditions phase 2."},
+    {id:uid(),title:"Demander LOI phase 2 (extension / second pilote / précommande) si OK",type:"loi",owner:"Erwan",due:addDays(start,82),status:"todo",pr:"p2",notes:"Après usage clair + décideur identifié."}
+  ];
+}
+
+function load(){
+  const raw=localStorage.getItem(KEY);
+  if(raw){try{S=Object.assign(S,JSON.parse(raw));}catch(e){}}
+  if(!S.startDate) S.startDate=nextMondayISO();
+  if(!S.tasks || !S.tasks.length) S.tasks=defaultTasks(S.startDate);
+  if(!S.calMonth){const d=new Date();d.setDate(1);d.setHours(0,0,0,0);S.calMonth=d.toISOString();}
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+
+function badge(st){
+  if(st==="done") return '<span class="pill ok">Fait</span>';
+  if(st==="doing") return '<span class="pill warn">En cours</span>';
+  if(st==="blocked") return '<span class="pill bad">Bloqué</span>';
+  return '<span class="pill">À faire</span>';
+}
+function updatePill(){
+  const b=S.tasks.filter(t=>t.status==="blocked").length;
+  const todo=S.tasks.filter(t=>t.status!=="done").length;
+  const p=document.getElementById("pill");
+  if(b){p.className="pill bad";p.textContent=b+" bloqué(s)";return;}
+  if(!todo){p.className="pill ok";p.textContent="Tout est fait";return;}
+  p.className="pill warn";p.textContent=todo+" à traiter";
+}
+function stage(){
+  const terrain=S.tasks.find(t=>t.type==="terrain" && t.title.toLowerCase().includes("email terrain"));
+  const contract=S.tasks.find(t=>t.type==="contract");
+  const pilot=S.tasks.find(t=>t.type==="pilot");
+  let st="Terrain → Email OK";
+  if(terrain && terrain.status==="done") st="Sponsors → Calls / Signature";
+  if(contract && contract.status==="done") st="Hardening → 8 semaines";
+  if(pilot && pilot.status==="doing") st="Pilote → en cours";
+  if(pilot && pilot.status==="done") st="Rapport → puis LOI";
+  document.getElementById("kStage").textContent=st;
+}
+
+function render(){
+  document.getElementById("startDate").value=S.startDate;
+  document.getElementById("targetCash").value=S.targetCash;
+  document.getElementById("pilotRegion").value=S.pilotRegion;
+  document.getElementById("onsiteOwner").value=S.onsiteOwner;
+
+  const fs=document.getElementById("fStatus").value;
+  const ft=document.getElementById("fType").value;
+  let tasks=[...S.tasks];
+  if(fs!=="all") tasks=tasks.filter(t=>t.status===fs);
+  if(ft!=="all") tasks=tasks.filter(t=>t.type===ft);
+
+  const pr={p1:0,p2:1,p3:2};
+  tasks.sort((a,b)=>((a.due||"9999")<(b.due||"9999")?-1:(a.due||"9999")>(b.due||"9999")?1:(pr[a.pr]??9)-(pr[b.pr]??9)));
+
+  const tbody=document.getElementById("tbody");
+  tbody.innerHTML=tasks.map(t=>{
+    const meta=TYPE[t.type]||{l:t.type,c:"#7aa2ff"};
+    const dot=`<span class="dot" style="background:${meta.c}"></span>`;
+    return `<tr>
+      <td><div style="font-weight:900">${dot}${esc(t.title)}</div><div class="tiny">Priorité: <span class="mono">${(t.pr||"p2").toUpperCase()}</span></div></td>
+      <td><span class="pill">${meta.l}</span></td>
+      <td>${esc(t.owner||"—")}</td>
+      <td class="mono">${t.due||"—"}</td>
+      <td>${badge(t.status)}</td>
+      <td><div class="tiny">${esc((t.notes||"").slice(0,180))}${(t.notes||"").length>180?"…":""}</div></td>
+      <td style="text-align:right">
+        <button class="btnlink" onclick="openEdit('${t.id}')">Éditer</button>
+        <button class="btnlink" onclick="toggleDone('${t.id}')">${t.status==="done"?"↩︎":"✓"}</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  updatePill(); stage(); fillTemplates(); renderCalendar();
+}
+
+function fillTemplates(){
+  const region=S.pilotRegion;
+  const onsite=S.onsiteOwner;
+  document.getElementById("tplTerrain").textContent =
+`1) Nous développons ARKEO, un compagnon de robotique sociale pour seniors, pour soutenir le lien et l’engagement au quotidien.
+2) Prototype fonctionnel ; nous cherchons un site en ${region} pour un pilote in-site court (2–3 semaines).
+3) Pilote encadré : un référent côté site, créneaux définis, et ${onsite}.
+4) Statut assumé : prototype/beta — objectif = acceptabilité, usage, points de fiabilité à corriger.
+5) Mesures simples : acceptabilité (continuer oui/non), valeur perçue (1–5), incidents/temps de reprise — rapport remis au site.
+6) Prochain pas : confirmation par email (site + référent + dates + “beta accepté”).`;
+
+  document.getElementById("tplSponsor").textContent =
+`1) Nous déployons un compagnon de robotique sociale pour seniors.
+2) Prototype fonctionnel + terrain activable en ${region} (via Siel Bleu).
+3) Programme borné : 8 semaines hardening “MVP pilotable”, puis pilote in-site 2–3 semaines, puis rapport.
+4) Inclus : continuité (spares/reprise <72h) + baseline privacy/safety (consentement, règles data, procédure incident).
+5) Budget demandé : ${S.targetCash} (co-financé en nature par l’équipe).
+6) Seriez-vous disponible 30 minutes pour valider l’éligibilité et la possibilité de sponsoring ?`;
+
+  document.getElementById("tplEmail").textContent =
+`Objet : Confirmation pilote ARKEO — [Site], [dates]
+
+Bonjour [Nom],
+
+Suite à notre échange, voici le récapitulatif pour confirmation :
+• Site : [Nom du site], [Ville – Catalogne]
+• Référent opérationnel : [Nom, fonction, téléphone/email]
+• Fenêtre : [date début] → [date fin] (2–3 semaines)
+• Statut : prototype/beta accepté ; opérateur ARKEO présent sur place ; créneaux définis.
+
+Pouvez-vous répondre “OK” à ce message pour confirmer ?
+Merci,
+[Prénom]`;
+
+  document.getElementById("tplCTA").textContent =
+`CTA : “Auriez-vous 30 minutes cette semaine pour valider si vous pouvez sponsoriser le programme 50k (hardening 8 semaines + pilote in-site + rapport) ?”`;
+}
+
+function renderCalendar(){
+  const m=new Date(S.calMonth); m.setDate(1);
+  document.getElementById("calLabel").textContent=m.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const dow=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  document.getElementById("dow").innerHTML=dow.map(x=>`<div class="dow">${x}</div>`).join("");
+  const y=m.getFullYear(), mo=m.getMonth();
+  const first=new Date(y,mo,1);
+  const offset=(first.getDay()+6)%7;
+  const dim=new Date(y,mo+1,0).getDate();
+  const prevDim=new Date(y,mo,0).getDate();
+  const cells=[];
+  for(let i=0;i<offset;i++){const day=prevDim-offset+1+i;const d=new Date(y,mo-1,day);cells.push({iso:d.toISOString().slice(0,10),day,out:true});}
+  for(let d=1;d<=dim;d++){const dt=new Date(y,mo,d);cells.push({iso:dt.toISOString().slice(0,10),day:d,out:false});}
+  while(cells.length%7!==0){const idx=cells.length-(offset+dim)+1;const dt=new Date(y,mo+1,idx);cells.push({iso:dt.toISOString().slice(0,10),day:idx,out:true});}
+  const by={}; for(const t of S.tasks){if(!t.due) continue; (by[t.due] ||= []).push(t);}
+
+  document.getElementById("cal").innerHTML=cells.map(c=>{
+    const ev=(by[c.iso]||[]).slice(0,3).map(t=>{
+      const meta=TYPE[t.type]||{l:t.type,c:"#7aa2ff"};
+      const st=t.status==="done"?"✓":t.status==="blocked"?"!":t.status==="doing"?"…":"•";
+      return `<div class="event" onclick="openEdit('${t.id}')" title="${esc(t.title)}"><span class="dot" style="background:${meta.c}"></span><span class="mono"><b>${st}</b></span> ${esc(shorten(t.title,44))}</div>`;
+    }).join("");
+    return `<div class="day ${c.out?"out":""}"><div class="daynum">${c.day}</div>${ev}</div>`;
+  }).join("");
+}
+
+let editId=null;
+function openModal(){document.getElementById("modal").style.display="block";}
+function closeModal(){document.getElementById("modal").style.display="none";}
+window.openEdit=function(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  editId=id;
+  document.getElementById("mTitleLbl").textContent="Éditer tâche";
+  document.getElementById("mTitle").value=t.title||"";
+  document.getElementById("mType").value=t.type||"pack";
+  document.getElementById("mOwner").value=t.owner||"";
+  document.getElementById("mDue").value=t.due||"";
+  document.getElementById("mStatus").value=t.status||"todo";
+  document.getElementById("mPr").value=t.pr||"p2";
+  document.getElementById("mNotes").value=t.notes||"";
+  document.getElementById("mDelete").style.display="inline-block";
+  openModal();
+}
+function openNew(){
+  editId=null;
+  document.getElementById("mTitleLbl").textContent="Nouvelle tâche";
+  document.getElementById("mTitle").value="";
+  document.getElementById("mType").value="pack";
+  document.getElementById("mOwner").value="";
+  document.getElementById("mDue").value="";
+  document.getElementById("mStatus").value="todo";
+  document.getElementById("mPr").value="p2";
+  document.getElementById("mNotes").value="";
+  document.getElementById("mDelete").style.display="none";
+  openModal();
+}
+function saveModal(){
+  const t={id:editId||uid(),title:document.getElementById("mTitle").value.trim(),type:document.getElementById("mType").value,owner:document.getElementById("mOwner").value.trim(),due:document.getElementById("mDue").value,status:document.getElementById("mStatus").value,pr:document.getElementById("mPr").value,notes:document.getElementById("mNotes").value.trim()};
+  if(!t.title){toast("Titre requis.");return;}
+  if(editId){const i=S.tasks.findIndex(x=>x.id===editId); if(i>=0) S.tasks[i]=t; toast("Tâche mise à jour.");}
+  else{S.tasks.push(t); toast("Tâche ajoutée.");}
+  save(); render(); closeModal();
+}
+function delModal(){
+  if(!editId) return;
+  S.tasks=S.tasks.filter(x=>x.id!==editId);
+  save(); render(); closeModal(); toast("Tâche supprimée.");
+}
+window.toggleDone=function(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  t.status=(t.status==="done")?"todo":"done";
+  save(); render();
+}
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="arkeoplan.json"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+function importJSON(){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="application/json";
+  inp.onchange=async()=>{const f=inp.files[0]; if(!f) return; const txt=await f.text();
+    try{const obj=JSON.parse(txt); if(!obj.tasks||!Array.isArray(obj.tasks)) throw new Error("Format invalide"); S=Object.assign(S,obj); save(); render(); toast("Import terminé.");}
+    catch(e){toast("Import échoué: "+e.message);}
+  };
+  inp.click();
+}
+function resetAll(){
+  if(!confirm("Réinitialiser le plan ? (perte des modifications locales)")) return;
+  localStorage.removeItem(KEY); location.reload();
+}
+function recalcFromStart(){
+  if(!confirm("Recalculer les dates à partir de J0 ? (remplace les tâches par le plan par défaut)")) return;
+  S.tasks=defaultTasks(S.startDate); save(); render(); toast("Dates recalculées.");
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  load();
+  document.getElementById("btnAdd").addEventListener("click", openNew);
+  document.getElementById("btnExport").addEventListener("click", exportJSON);
+  document.getElementById("btnImport").addEventListener("click", importJSON);
+  document.getElementById("btnReset").addEventListener("click", resetAll);
+  document.getElementById("fStatus").addEventListener("change", render);
+  document.getElementById("fType").addEventListener("change", render);
+  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("mSave").addEventListener("click", saveModal);
+  document.getElementById("mDelete").addEventListener("click", delModal);
+  document.getElementById("modal").addEventListener("click", (e)=>{if(e.target.id==="modal") closeModal();});
+
+  document.getElementById("startDate").addEventListener("change", (e)=>{S.startDate=e.target.value; save(); recalcFromStart();});
+  document.getElementById("targetCash").addEventListener("input", (e)=>{S.targetCash=e.target.value; save(); fillTemplates();});
+  document.getElementById("pilotRegion").addEventListener("input", (e)=>{S.pilotRegion=e.target.value; save(); fillTemplates();});
+  document.getElementById("onsiteOwner").addEventListener("input", (e)=>{S.onsiteOwner=e.target.value; save(); fillTemplates();});
+
+  document.getElementById("prev").addEventListener("click", ()=>{const d=new Date(S.calMonth); d.setMonth(d.getMonth()-1); d.setDate(1); S.calMonth=d.toISOString(); save(); renderCalendar();});
+  document.getElementById("next").addEventListener("click", ()=>{const d=new Date(S.calMonth); d.setMonth(d.getMonth()+1); d.setDate(1); S.calMonth=d.toISOString(); save(); renderCalendar();});
+
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click", async ()=>{
+    const sel=b.getAttribute("data-copy"); const el=document.querySelector(sel); if(!el) return;
+    await navigator.clipboard.writeText(el.textContent); toast("Copié.");
+  }));
+
+  render();
+});
+</script>
+</body>
+</html>
