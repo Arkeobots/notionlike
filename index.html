@@ -1,60 +1,72 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ARKEO — Plan partagé</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARKEO — Plan partagé</title>
 
-  <!-- ✅ Supabase UMD (OBLIGATOIRE) -->
- <script src="./vendor/supabase.min.js"></script>
-  <style>
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:#0b1220;
-      color:#e8eefc;
-    }
-    header{
-      padding:16px 20px;
-      border-bottom:1px solid rgba(255,255,255,.1);
-    }
-    .wrap{max-width:1000px;margin:0 auto;padding:20px}
-    button{
-      padding:10px 14px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.2);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      font-weight:700;
-      cursor:pointer;
-    }
-    input{
-      width:100%;
-      padding:10px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.2);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-    }
-    .card{
-      background:#101a2e;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      padding:20px;
-      margin-top:20px;
-    }
-    .hide{display:none}
-    .toast{
-      position:fixed;
-      bottom:20px;
-      right:20px;
-      background:#101a2e;
-      border:1px solid rgba(255,255,255,.2);
-      padding:10px 14px;
-      border-radius:12px;
-      font-size:14px;
-    }
-  </style>
+<!-- Supabase UMD local -->
+<script src="./vendor/supabase.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:#0b1220;
+  color:#e8eefc;
+}
+header{
+  padding:16px 20px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.wrap{max-width:1200px;margin:0 auto;padding:20px}
+.card{
+  background:#101a2e;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:20px;
+  margin-top:20px;
+}
+.hide{display:none}
+button{
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.05);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+input,select,textarea{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.05);
+  color:#fff;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:14px;
+}
+th{color:#a9b7d6;text-align:left}
+.toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#101a2e;
+  border:1px solid rgba(255,255,255,.2);
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:14px;
+}
+</style>
 </head>
 
 <body>
@@ -65,22 +77,41 @@
 
 <div class="wrap">
 
-  <!-- LOGIN -->
-  <div class="card" id="loginCard">
-    <h3>Connexion</h3>
-    <p>Magic link email (recommandé)</p>
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+  <h3>Connexion</h3>
+  <p>Magic link email</p>
+  <input id="loginEmail" placeholder="prenom@domaine.com">
+  <br><br>
+  <button id="btnSendLink">Envoyer le lien</button>
+</div>
 
-    <input id="loginEmail" placeholder="prenom@domaine.com" />
-    <br><br>
-    <button id="btnSendLink">Envoyer le lien</button>
-  </div>
-
-  <!-- APP -->
-  <div class="card hide" id="appCard">
-    <h3>Connecté</h3>
-    <p id="userEmail"></p>
+<!-- APP -->
+<div class="card hide" id="appCard">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <strong id="userEmail"></strong><br>
+      <small id="planLabel"></small>
+    </div>
     <button id="btnLogout">Se déconnecter</button>
   </div>
+
+  <h3 style="margin-top:20px">Tâches</h3>
+  <button id="btnAdd">+ Ajouter</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Titre</th>
+        <th>Type</th>
+        <th>Owner</th>
+        <th>Échéance</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody id="tasksBody"></tbody>
+  </table>
+</div>
 
 </div>
 
@@ -103,33 +134,29 @@ const supabaseClient = window.supabase.createClient(
 
 const $ = id => document.getElementById(id);
 function toast(msg){
-  const t = $("toast");
-  t.textContent = msg;
+  const t=$("toast");
+  t.textContent=msg;
   t.classList.remove("hide");
   clearTimeout(window.__t);
-  window.__t = setTimeout(()=>t.classList.add("hide"), 3000);
+  window.__t=setTimeout(()=>t.classList.add("hide"),3000);
 }
 
 /* ============== AUTH ===================== */
 
 async function sendMagicLink(){
-  const email = $("loginEmail").value.trim();
-  if(!email){ toast("Email requis"); return; }
+  const email=$("loginEmail").value.trim();
+  if(!email){toast("Email requis");return;}
 
   try{
-    const { error } = await supabaseClient.auth.signInWithOtp({
+    const {error}=await supabaseClient.auth.signInWithOtp({
       email,
-      options:{
-        emailRedirectTo: window.location.href
-      }
+      options:{ emailRedirectTo: window.location.href }
     });
-
-    if(error) toast("Erreur: " + error.message);
-    else toast("Lien envoyé. Vérifie ta boîte mail.");
-
+    if(error) toast("Erreur: "+error.message);
+    else toast("Lien envoyé");
   }catch(e){
     console.error(e);
-    toast("Crash JS: " + e.message);
+    toast("Crash JS: "+e.message);
   }
 }
 
@@ -138,12 +165,82 @@ async function logout(){
   showLoggedOut();
 }
 
+/* ============== DATA ===================== */
+
+let currentPlan=null;
+
+async function getOrCreatePlan(user){
+  let {data:plans}=await supabaseClient
+    .from("plans")
+    .select("*")
+    .eq("created_by",user.id)
+    .limit(1);
+
+  if(plans && plans[0]) return plans[0];
+
+  const {data:newPlan,error}=await supabaseClient
+    .from("plans")
+    .insert({name:"ARKEO Plan",created_by:user.id})
+    .select()
+    .single();
+
+  if(error) throw error;
+
+  await supabaseClient.from("plan_members").insert({
+    plan_id:newPlan.id,
+    user_id:user.id,
+    role:"owner"
+  });
+
+  await seedTasks(newPlan.id);
+
+  return newPlan;
+}
+
+async function seedTasks(planId){
+  const tasks=[
+    {title:"Confirmer site pilote (email)",type:"terrain"},
+    {title:"Finaliser programme 50k",type:"pack"},
+    {title:"Contacter fondations",type:"sponsor"},
+    {title:"Signer contrat sponsor",type:"contract"},
+    {title:"Hardening MVP",type:"build"},
+    {title:"Pilote in-site",type:"pilot"},
+    {title:"Rapport final",type:"report"}
+  ].map(t=>({
+    ...t,
+    plan_id:planId,
+    status:"todo"
+  }));
+
+  await supabaseClient.from("tasks").insert(tasks);
+}
+
+async function loadTasks(){
+  const {data,error}=await supabaseClient
+    .from("tasks")
+    .select("*")
+    .eq("plan_id",currentPlan.id)
+    .order("created_at");
+
+  if(error) throw error;
+
+  $("tasksBody").innerHTML=data.map(t=>`
+    <tr>
+      <td>${t.title}</td>
+      <td>${t.type}</td>
+      <td>${t.owner||""}</td>
+      <td>${t.due||""}</td>
+      <td>${t.status}</td>
+    </tr>
+  `).join("");
+}
+
 /* ============== UI ======================= */
 
 function showLoggedIn(user){
   $("loginCard").classList.add("hide");
   $("appCard").classList.remove("hide");
-  $("userEmail").textContent = user.email;
+  $("userEmail").textContent=user.email;
 }
 
 function showLoggedOut(){
@@ -153,20 +250,25 @@ function showLoggedOut(){
 
 /* ============== BOOT ===================== */
 
-$("btnSendLink").addEventListener("click", sendMagicLink);
-$("btnLogout").addEventListener("click", logout);
+$("btnSendLink").addEventListener("click",sendMagicLink);
+$("btnLogout").addEventListener("click",logout);
 
-supabaseClient.auth.getSession().then(({ data })=>{
+supabaseClient.auth.getSession().then(async({data})=>{
   if(data.session){
-    showLoggedIn(data.session.user);
-  }else{
-    showLoggedOut();
+    const user=data.session.user;
+    showLoggedIn(user);
+    currentPlan=await getOrCreatePlan(user);
+    $("planLabel").textContent="Plan: "+currentPlan.id.slice(0,8);
+    await loadTasks();
   }
 });
 
-supabaseClient.auth.onAuthStateChange((_event, session)=>{
+supabaseClient.auth.onAuthStateChange(async(_e,session)=>{
   if(session?.user){
     showLoggedIn(session.user);
+    currentPlan=await getOrCreatePlan(session.user);
+    $("planLabel").textContent="Plan: "+currentPlan.id.slice(0,8);
+    await loadTasks();
   }else{
     showLoggedOut();
   }
@@ -175,4 +277,3 @@ supabaseClient.auth.onAuthStateChange((_event, session)=>{
 
 </body>
 </html>
-
