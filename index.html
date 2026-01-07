@@ -3,1013 +3,176 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ARKEO — Plan (Terrain → Sponsor 50k → Pilote → LOI)</title>
+  <title>ARKEO — Plan partagé</title>
 
-  <!-- Supabase client (CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ✅ Supabase UMD (OBLIGATOIRE) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 
   <style>
-    :root{
-      --bg:#0b1220; --panel:#101a2e; --text:#e8eefc; --muted:#a9b7d6;
-      --accent:#7aa2ff; --ok:#7ef0c2; --warn:#ffcd6b; --bad:#ff6b8a;
-      --line:rgba(255,255,255,.08); --shadow:0 10px 30px rgba(0,0,0,.35);
-      --r:18px; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    }
-    *{box-sizing:border-box}
     body{
-      margin:0; font-family:var(--sans); color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 20% -10%, rgba(122,162,255,.25), transparent 55%),
-        radial-gradient(900px 700px at 110% 10%, rgba(126,240,194,.12), transparent 50%),
-        linear-gradient(180deg, #070b14, var(--bg));
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:#0b1220;
+      color:#e8eefc;
     }
     header{
-      position:sticky; top:0; z-index:10;
-      backdrop-filter: blur(14px);
-      background: rgba(11,18,32,.75);
-      border-bottom:1px solid var(--line);
+      padding:16px 20px;
+      border-bottom:1px solid rgba(255,255,255,.1);
     }
-    .wrap{max-width:1200px; margin:0 auto; padding:18px 18px 28px}
-    .top{display:flex; gap:14px; align-items:center; justify-content:space-between; padding:14px 0; flex-wrap:wrap}
-    .brand{display:flex; gap:12px; align-items:center}
-    .logo{width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, rgba(122,162,255,.95), rgba(126,240,194,.85)); box-shadow:var(--shadow)}
-    h1{font-size:18px; margin:0}
-    .sub{color:var(--muted); font-size:12px; margin-top:2px}
-    .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    button,.btn{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding:9px 12px;
-      border-radius:12px;
+    .wrap{max-width:1000px;margin:0 auto;padding:20px}
+    button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-weight:700;
       cursor:pointer;
-      font-weight:800;
     }
-    button:hover{border-color: rgba(122,162,255,.5); background: rgba(255,255,255,.08)}
-    .primary{background: rgba(122,162,255,.18); border-color: rgba(122,162,255,.35)}
-    .good{background: rgba(126,240,194,.14); border-color: rgba(126,240,194,.3)}
-    .warn{background: rgba(255,205,107,.12); border-color: rgba(255,205,107,.25)}
-    .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:18px; margin-top:18px}
-    @media (max-width:980px){.grid{grid-template-columns:1fr}}
-    .card{
-      background: linear-gradient(180deg, rgba(16,26,46,.92), rgba(16,26,46,.72));
-      border:1px solid var(--line);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .hd{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 16px; border-bottom:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      gap:12px; flex-wrap:wrap;
-    }
-    .bd{padding:16px}
-    .section-title{font-weight:900; font-size:14px; margin:0}
-    .tiny{font-size:12px; color:var(--muted)}
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:end}
-    .field{flex:1; min-width:180px}
-    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
-    input,select,textarea{
+    input{
       width:100%;
-      background: rgba(255,255,255,.03);
-      border:1px solid var(--line);
-      color: var(--text);
-      border-radius:12px;
       padding:10px;
-      outline:none;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.05);
+      color:#fff;
     }
-    textarea{min-height:90px; resize:vertical}
-    .pill{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      font-size:12px; background: rgba(255,255,255,.03);
+    .card{
+      background:#101a2e;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:20px;
+      margin-top:20px;
     }
-    .pill.ok{border-color: rgba(126,240,194,.35); background: rgba(126,240,194,.12)}
-    .pill.warn{border-color: rgba(255,205,107,.35); background: rgba(255,205,107,.12)}
-    .pill.bad{border-color: rgba(255,107,138,.35); background: rgba(255,107,138,.12)}
-    .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
-    @media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
-    .kpi{border:1px solid var(--line); border-radius:14px; padding:12px; background: rgba(255,255,255,.03)}
-    .kpi .label{color:var(--muted); font-size:12px}
-    .kpi .value{font-size:18px; font-weight:900; margin-top:6px}
-    .table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      border:1px solid var(--line);
-      border-radius:14px;
-      overflow:hidden;
-      background: rgba(255,255,255,.02);
+    .hide{display:none}
+    .toast{
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      background:#101a2e;
+      border:1px solid rgba(255,255,255,.2);
+      padding:10px 14px;
+      border-radius:12px;
+      font-size:14px;
     }
-    .table th,.table td{padding:10px; border-bottom:1px solid var(--line); vertical-align:top; font-size:13px}
-    .table th{color:var(--muted); font-weight:900; text-align:left; background: rgba(255,255,255,.03); position:sticky; top:0}
-    .table tr:last-child td{border-bottom:none}
-    .mono{font-family:var(--mono)}
-    .btnlink{
-      font-size:12px; font-weight:900;
-      padding:6px 10px; border-radius:12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.02);
-      cursor:pointer;
-    }
-    .btnlink:hover{border-color: rgba(122,162,255,.55)}
-    .calendar{display:flex; flex-direction:column; gap:18px}
-    .cal-head{display:flex; align-items:center; justify-content:space-between; gap:10px}
-    .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:8px}
-    .dow{color:var(--muted); font-size:12px; font-weight:900; text-align:center; padding:6px 0}
-    .day{border:1px solid var(--line); border-radius:14px; padding:10px; min-height:88px; background: rgba(255,255,255,.02)}
-    .day.out{opacity:.45}
-    .daynum{font-weight:900; font-size:12px; color:var(--muted)}
-    .event{
-      margin-top:8px; font-size:12px; line-height:1.2;
-      padding:6px 8px; border-radius:12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      cursor:pointer;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-      overflow:hidden;
-    }
-    .dot{width:8px; height:8px; border-radius:999px; display:inline-block; margin-right:6px}
-    .template{border:1px solid var(--line); border-radius:14px; background: rgba(255,255,255,.02); padding:12px}
-    .template pre{margin:10px 0 0; padding:12px; border-radius:12px; border:1px solid var(--line); background: rgba(0,0,0,.25); overflow:auto; font-size:12px; line-height:1.45; white-space:pre-wrap}
-    .footer{margin:24px 0 10px; color:var(--muted); font-size:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
-    .toast{position:fixed; right:16px; bottom:16px; background: rgba(16,26,46,.95); border:1px solid var(--line); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); color:var(--text); font-size:13px; display:none; max-width:360px}
-    .hide{display:none !important;}
   </style>
 </head>
 
 <body>
-<header>
-  <div class="wrap top">
-    <div class="brand">
-      <div class="logo"></div>
-      <div>
-        <h1>ARKEO — Plan partagé</h1>
-        <div class="sub">Supabase (DB + Auth + Realtime) • GitHub Pages friendly</div>
-      </div>
-    </div>
 
-    <div class="actions" id="authActions">
-      <span class="pill" id="authState">Non connecté</span>
-      <button class="btnlink" id="btnOpenLogin">Se connecter</button>
-      <button class="btnlink hide" id="btnLogout">Se déconnecter</button>
-      <button class="primary hide" id="btnAdd">+ Ajouter une tâche</button>
-    </div>
-  </div>
+<header>
+  <strong>ARKEO — Plan partagé</strong>
 </header>
 
-<main class="wrap">
-  <!-- Login Card -->
+<div class="wrap">
+
+  <!-- LOGIN -->
   <div class="card" id="loginCard">
-    <div class="hd">
-      <div>
-        <div class="section-title">Connexion</div>
-        <div class="tiny">Magic link email (recommandé). Utilisez l’email de l’équipe (Erwan/Thomas…)</div>
-      </div>
-      <span class="pill warn">Auth Supabase</span>
-    </div>
-    <div class="bd">
-      <div class="row">
-        <div class="field" style="flex:2">
-          <label>Email</label>
-          <input id="loginEmail" placeholder="prenom@domaine.com" />
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button class="good" id="btnSendLink">Envoyer le lien</button>
-        </div>
-      </div>
-      <div class="tiny" style="margin-top:10px">
-        Après clic sur le lien reçu, la page se reconnecte automatiquement et charge le plan.
-      </div>
-    </div>
+    <h3>Connexion</h3>
+    <p>Magic link email (recommandé)</p>
+
+    <input id="loginEmail" placeholder="prenom@domaine.com" />
+    <br><br>
+    <button id="btnSendLink">Envoyer le lien</button>
   </div>
 
-  <!-- App Card -->
+  <!-- APP -->
   <div class="card hide" id="appCard">
-    <div class="hd">
-      <div>
-        <div class="section-title">Paramètres du plan</div>
-        <div class="tiny">Ces champs sont purement “UI” (ils ne sont pas stockés en DB dans cette v1).</div>
-      </div>
-      <span class="pill ok" id="pill">Plan prêt</span>
-    </div>
-    <div class="bd">
-      <div class="row">
-        <div class="field"><label>Objectif cash</label><input id="targetCash" value="50 000 €" /></div>
-        <div class="field"><label>Zone pilote</label><input id="pilotRegion" value="Catalogne (Barcelone si possible)" /></div>
-        <div class="field"><label>Opérateur in-site</label><input id="onsiteOwner" value="Thomas (CTO) — full in-site" /></div>
-        <div class="field"><label>Plan (workspace)</label><input id="planName" disabled /></div>
-      </div>
-
-      <div style="margin-top:14px" class="kpis">
-        <div class="kpi"><div class="label">Étape</div><div class="value" id="kStage">Terrain → Email OK</div><div class="tiny">Verrou terrain, puis sponsor.</div></div>
-        <div class="kpi"><div class="label">Sponsors</div><div class="value">2–3 max</div><div class="tiny">Peu, ciblés, 2 relances max.</div></div>
-        <div class="kpi"><div class="label">Hardening</div><div class="value">8 semaines</div><div class="tiny">Jalons S4 et S7.</div></div>
-        <div class="kpi"><div class="label">Pilote</div><div class="value">2–3 semaines</div><div class="tiny">KPIs simples + rapport.</div></div>
-      </div>
-    </div>
+    <h3>Connecté</h3>
+    <p id="userEmail"></p>
+    <button id="btnLogout">Se déconnecter</button>
   </div>
 
-  <div class="grid hide" id="grid">
-    <!-- Left -->
-    <div class="card">
-      <div class="hd">
-        <div>
-          <div class="section-title">Tâches (partagées)</div>
-          <div class="tiny">Source of truth = DB Supabase. Realtime activé sur la table tasks.</div>
-        </div>
-        <div class="row">
-          <div class="field" style="min-width:160px">
-            <label>Statut</label>
-            <select id="fStatus">
-              <option value="all">Tous</option>
-              <option value="todo">À faire</option>
-              <option value="doing">En cours</option>
-              <option value="blocked">Bloqué</option>
-              <option value="done">Fait</option>
-            </select>
-          </div>
-          <div class="field" style="min-width:160px">
-            <label>Type</label>
-            <select id="fType">
-              <option value="all">Tous</option>
-              <option value="terrain">Terrain</option>
-              <option value="pack">Docs/Pack</option>
-              <option value="sponsor">Sponsor</option>
-              <option value="contract">Contrat</option>
-              <option value="build">Hardening</option>
-              <option value="pilot">Pilote</option>
-              <option value="report">Rapport</option>
-              <option value="loi">LOI phase 2</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="bd" style="padding:0">
-        <div style="overflow:auto;max-height:580px">
-          <table class="table">
-            <thead><tr>
-              <th style="min-width:280px">Tâche</th>
-              <th style="min-width:120px">Type</th>
-              <th style="min-width:120px">Owner</th>
-              <th style="min-width:120px">Échéance</th>
-              <th style="min-width:110px">Statut</th>
-              <th style="min-width:220px">Notes</th>
-              <th style="min-width:120px;text-align:right">Actions</th>
-            </tr></thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right -->
-    <div class="calendar">
-      <div class="card">
-        <div class="hd">
-          <div>
-            <div class="section-title">Calendrier</div>
-            <div class="tiny">Échéances et jalons (clique sur un event pour éditer).</div>
-          </div>
-          <div class="cal-head">
-            <button class="btnlink" id="prev">◀</button>
-            <div class="mono" id="calLabel" style="font-weight:900"></div>
-            <button class="btnlink" id="next">▶</button>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="cal-grid" id="dow"></div>
-          <div class="cal-grid" id="cal"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd">
-          <div>
-            <div class="section-title">Pitchs & templates</div>
-            <div class="tiny">Copier-coller, ton court, 1 CTA.</div>
-          </div>
-        </div>
-        <div class="bd" style="display:grid;gap:12px">
-          <div class="template">
-            <span class="pill ok">Pitch — Terrain (6 phrases)</span>
-            <pre id="tplTerrain"></pre>
-            <button class="btnlink" data-copy="#tplTerrain">Copier</button>
-          </div>
-          <div class="template">
-            <span class="pill ok">Pitch — Sponsor (6 phrases)</span>
-            <pre id="tplSponsor"></pre>
-            <button class="btnlink" data-copy="#tplSponsor">Copier</button>
-          </div>
-          <div class="template">
-            <span class="pill warn">Email — Confirmation terrain</span>
-            <pre id="tplEmail"></pre>
-            <button class="btnlink" data-copy="#tplEmail">Copier</button>
-          </div>
-          <div class="template">
-            <span class="pill warn">CTA sponsor (30 min)</span>
-            <pre id="tplCTA"></pre>
-            <button class="btnlink" data-copy="#tplCTA">Copier</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div>🔁 Realtime Supabase · Multi-user · DB source of truth</div>
-    <div class="mono">arkeoplan-supabase-v1</div>
-  </div>
-</main>
-
-<div class="toast" id="toast"></div>
-
-<!-- Modal -->
-<div id="modal" class="hide" style="position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.55); backdrop-filter: blur(8px);">
-  <div style="max-width:780px; margin:6vh auto; padding:0 16px;">
-    <div class="card" style="border-radius:22px;">
-      <div class="hd">
-        <div>
-          <div class="section-title" id="mTitleLbl">Nouvelle tâche</div>
-          <div class="tiny">Les modifications sont sauvegardées en DB (Supabase).</div>
-        </div>
-        <button class="btnlink" id="mClose">✕</button>
-      </div>
-      <div class="bd">
-        <div class="row">
-          <div class="field" style="flex:2">
-            <label>Titre</label>
-            <input id="mTitle" placeholder="Ex: Obtenir email terrain (site + référent + dates + beta accepté)" />
-          </div>
-          <div class="field">
-            <label>Type</label>
-            <select id="mType">
-              <option value="terrain">Terrain</option>
-              <option value="pack">Docs/Pack</option>
-              <option value="sponsor">Sponsor</option>
-              <option value="contract">Contrat</option>
-              <option value="build">Hardening</option>
-              <option value="pilot">Pilote</option>
-              <option value="report">Rapport</option>
-              <option value="loi">LOI phase 2</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Owner</label>
-            <input id="mOwner" placeholder="Erwan / Thomas / ..." />
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div class="field">
-            <label>Échéance</label>
-            <input type="date" id="mDue" />
-          </div>
-          <div class="field">
-            <label>Statut</label>
-            <select id="mStatus">
-              <option value="todo">À faire</option>
-              <option value="doing">En cours</option>
-              <option value="blocked">Bloqué</option>
-              <option value="done">Fait</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Priorité</label>
-            <select id="mPr">
-              <option value="p1">P1 (critique)</option>
-              <option value="p2">P2</option>
-              <option value="p3">P3</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="margin-top:10px">
-          <label>Notes</label>
-          <textarea id="mNotes" placeholder="Contexte, liens, décisions, next step..."></textarea>
-        </div>
-
-        <div class="row" style="margin-top:12px; justify-content:space-between">
-          <div class="tiny">Astuce : colle ici l’email terrain ou les exigences sponsor.</div>
-          <div style="display:flex; gap:10px">
-            <button class="btnlink" id="mDelete" style="display:none">Supprimer</button>
-            <button class="good" id="mSave">Enregistrer</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
+<div class="toast hide" id="toast"></div>
+
 <script>
-/** =========================
- *  CONFIG — À REMPLACER
- *  ========================= */
+/* ================= CONFIG ================= */
 
 const SUPABASE_URL = "https://bejbipoebjzlsugyclqw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_TiMTmX-uqin2PVlsJsjGuw_b11OFSy8";
 
-/** =========================
- *  Supabase Client
- *  ========================= */
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ============== CLIENT =================== */
 
-/** =========================
- *  UI helpers
- *  ========================= */
-const $ = (id)=>document.getElementById(id);
-function show(el){ el.classList.remove("hide"); }
-function hide(el){ el.classList.add("hide"); }
-function esc(s){ return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
-function shorten(s,n){ return s.length>n ? s.slice(0,n-1)+"…" : s; }
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+/* ============== HELPERS ================== */
+
+const $ = id => document.getElementById(id);
 function toast(msg){
   const t = $("toast");
   t.textContent = msg;
-  t.style.display = "block";
-  clearTimeout(window.__toast);
-  window.__toast = setTimeout(()=>t.style.display="none", 2400);
+  t.classList.remove("hide");
+  clearTimeout(window.__t);
+  window.__t = setTimeout(()=>t.classList.add("hide"), 3000);
 }
 
-/** =========================
- *  App state
- *  ========================= */
-const TYPE = {
-  terrain:{l:"Terrain",c:"#7aa2ff"},
-  pack:{l:"Docs/Pack",c:"#7ef0c2"},
-  sponsor:{l:"Sponsor",c:"#ffcd6b"},
-  contract:{l:"Contrat",c:"#7aa2ff"},
-  build:{l:"Hardening",c:"#7ef0c2"},
-  pilot:{l:"Pilote",c:"#ffcd6b"},
-  report:{l:"Rapport",c:"#7aa2ff"},
-  loi:{l:"LOI",c:"#7ef0c2"},
-};
-let plan = null;                // current plan row
-let tasks = [];                 // tasks loaded from DB
-let calMonth = (()=>{ const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })();
-let realtimeChannel = null;
+/* ============== AUTH ===================== */
 
-/** =========================
- *  Default seed tasks (inserted once for a new plan)
- *  ========================= */
-function seedTasksForPlan(planId){
-  const base = new Date();
-  base.setHours(0,0,0,0);
-
-  const addDays = (days)=>{
-    const d = new Date(base);
-    d.setDate(d.getDate()+days);
-    return d.toISOString().slice(0,10);
-  };
-
-  const defaults = [
-    {title:"Obtenir email terrain (site + référent + dates + 'beta accepté') via Siel Bleu", type:"terrain", owner:"Erwan / Siel Bleu", due:addDays(3), status:"todo", priority:"p1", notes:"Sortie: email 'OK' du site. Sans ça, pas de sponsoring efficace."},
-    {title:"Plan B terrain discret (1 site alternatif en Catalogne)", type:"terrain", owner:"Erwan", due:addDays(7), status:"todo", priority:"p2", notes:"Ne pas dépendre d’un seul contact."},
-    {title:"Finaliser pack sponsor-ready (Programme 50k + Budget 8 lignes + Fiche pilote)", type:"pack", owner:"Erwan", due:addDays(6), status:"todo", priority:"p1", notes:"Ajouter: Go/No-Go, baseline privacy/safety (5 items), plan reprise <72h."},
-    {title:"Lister pièces critiques + coûts/délais + spare kit minimum (continuité)", type:"pack", owner:"Thomas (CTO)", due:addDays(6), status:"todo", priority:"p1", notes:"But: éviter qu’une casse stoppe le pilote."},
-    {title:"Sélectionner 2–3 fondations max + trouver contact direct", type:"sponsor", owner:"Erwan", due:addDays(8), status:"todo", priority:"p1", notes:"Process réaliste, thématique vieillissement/autonomie/inclusion."},
-    {title:"Outreach sponsor (CTA 30 min) avec site confirmé + pack", type:"sponsor", owner:"Erwan", due:addDays(10), status:"todo", priority:"p1", notes:"Ton court, factuel, beta assumé. Relances J+10/J+20 max."},
-    {title:"Signer contrat programme sponsorisé (min 40–50% upfront)", type:"contract", owner:"Erwan", due:addDays(25), status:"todo", priority:"p1", notes:"Inclure: statut beta, limites, confidentialité, données anonymisées, paiement."},
-    {title:"Hardening MVP pilotable — jalon S4 (démo pilotable contrôlée)", type:"build", owner:"Thomas (CTO)", due:addDays(28), status:"todo", priority:"p1", notes:"Stabilité + instrumentation."},
-    {title:"Hardening MVP pilotable — jalon S7 (ready-for-site + plan reprise)", type:"build", owner:"Thomas (CTO)", due:addDays(49), status:"todo", priority:"p1", notes:"Baseline privacy/safety + continuité (spares, reprise)."},
-    {title:"Pilote in-site Catalogne (2–3 semaines) — exécution + journal incidents", type:"pilot", owner:"Thomas (CTO)", due:addDays(70), status:"todo", priority:"p1", notes:"KPIs sponsor: acceptabilité, valeur perçue, incidents/temps de reprise."},
-    {title:"Rapport final (≤3 pages) + restitution site & sponsor", type:"report", owner:"Erwan", due:addDays(78), status:"todo", priority:"p1", notes:"Résumé exécutif + résultats + limites + conditions phase 2."},
-    {title:"Demander LOI phase 2 (extension / second pilote / précommande) si OK", type:"loi", owner:"Erwan", due:addDays(82), status:"todo", priority:"p2", notes:"Après usage clair + décideur identifié."},
-  ];
-
-  return defaults.map(d => ({...d, plan_id: planId}));
-}
-
-/** =========================
- *  Auth
- *  ========================= */
 async function sendMagicLink(){
   const email = $("loginEmail").value.trim();
-  if(!email){ toast("Email requis."); return; }
-  const { error } = await supabase.auth.signInWithOtp({ email });
-  if(error) toast("Erreur: " + error.message);
-  else toast("Lien envoyé. Vérifie ta boîte mail.");
+  if(!email){ toast("Email requis"); return; }
+
+  try{
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      options:{
+        emailRedirectTo: window.location.href
+      }
+    });
+
+    if(error) toast("Erreur: " + error.message);
+    else toast("Lien envoyé. Vérifie ta boîte mail.");
+
+  }catch(e){
+    console.error(e);
+    toast("Crash JS: " + e.message);
+  }
 }
 
 async function logout(){
-  await supabase.auth.signOut();
-  toast("Déconnecté.");
-  teardownRealtime();
-  setLoggedOutUI();
+  await supabaseClient.auth.signOut();
+  showLoggedOut();
 }
 
-function setLoggedOutUI(){
-  $("authState").textContent = "Non connecté";
-  $("authState").className = "pill";
-  hide($("btnLogout")); hide($("btnAdd"));
-  show($("btnOpenLogin"));
+/* ============== UI ======================= */
 
-  show($("loginCard"));
-  hide($("appCard"));
-  hide($("grid"));
+function showLoggedIn(user){
+  $("loginCard").classList.add("hide");
+  $("appCard").classList.remove("hide");
+  $("userEmail").textContent = user.email;
 }
 
-function setLoggedInUI(userEmail){
-  $("authState").textContent = userEmail || "Connecté";
-  $("authState").className = "pill ok";
-  show($("btnLogout")); show($("btnAdd"));
-  hide($("btnOpenLogin"));
-
-  hide($("loginCard"));
-  show($("appCard"));
-  show($("grid"));
+function showLoggedOut(){
+  $("loginCard").classList.remove("hide");
+  $("appCard").classList.add("hide");
 }
 
-/** =========================
- *  Plan: get or create + ensure membership + seed tasks if empty
- *  ========================= */
-async function getOrCreatePlan(){
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
-  if(userErr) throw userErr;
-  const user = userRes.user;
+/* ============== BOOT ===================== */
 
-  // 1) Do I already have a plan where I'm creator?
-  let { data: plans, error: pErr } = await supabase
-    .from("plans")
-    .select("*")
-    .eq("created_by", user.id)
-    .limit(1);
+$("btnSendLink").addEventListener("click", sendMagicLink);
+$("btnLogout").addEventListener("click", logout);
 
-  if(pErr) throw pErr;
-
-  let p = plans?.[0];
-
-  // 2) If not, do I have membership in any plan?
-  if(!p){
-    const { data: mem, error: mErr } = await supabase
-      .from("plan_members")
-      .select("plan_id")
-      .eq("user_id", user.id)
-      .limit(1);
-
-    if(mErr) throw mErr;
-
-    if(mem?.[0]?.plan_id){
-      const { data: p2, error: p2Err } = await supabase
-        .from("plans")
-        .select("*")
-        .eq("id", mem[0].plan_id)
-        .single();
-      if(p2Err) throw p2Err;
-      p = p2;
-    }
-  }
-
-  // 3) Still none? Create a plan
-  if(!p){
-    const { data: created, error: cErr } = await supabase
-      .from("plans")
-      .insert({ name: "ARKEO Plan", created_by: user.id })
-      .select()
-      .single();
-    if(cErr) throw cErr;
-    p = created;
-
-    // add membership for creator
-    const { error: memErr } = await supabase
-      .from("plan_members")
-      .insert({ plan_id: p.id, user_id: user.id, role: "owner" });
-    if(memErr) throw memErr;
-  }
-
-  // Ensure membership row exists for current user (in case creator row missing)
-  const { data: memCheck } = await supabase
-    .from("plan_members")
-    .select("*")
-    .eq("plan_id", p.id)
-    .eq("user_id", user.id)
-    .limit(1);
-  if(!memCheck || memCheck.length === 0){
-    await supabase.from("plan_members").insert({ plan_id: p.id, user_id: user.id, role: "member" });
-  }
-
-  return p;
-}
-
-async function ensureSeedIfEmpty(planId){
-  const { data: existing, error } = await supabase
-    .from("tasks")
-    .select("id")
-    .eq("plan_id", planId)
-    .limit(1);
-
-  if(error) throw error;
-  if(existing && existing.length > 0) return;
-
-  const seed = seedTasksForPlan(planId);
-  const { error: insErr } = await supabase.from("tasks").insert(seed);
-  if(insErr) throw insErr;
-
-  toast("Plan initial créé (tâches seed).");
-}
-
-/** =========================
- *  Tasks CRUD
- *  ========================= */
-async function loadTasks(){
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("plan_id", plan.id)
-    .order("due", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
-
-  if(error) throw error;
-  tasks = data || [];
-}
-
-async function createTask(t){
-  const payload = {
-    plan_id: plan.id,
-    title: t.title,
-    type: t.type,
-    owner: t.owner || null,
-    due: t.due || null,
-    status: t.status,
-    priority: t.priority,
-    notes: t.notes || null,
-    updated_at: new Date().toISOString()
-  };
-  const { error } = await supabase.from("tasks").insert(payload);
-  if(error) throw error;
-}
-
-async function updateTask(id, patch){
-  patch.updated_at = new Date().toISOString();
-  const { error } = await supabase.from("tasks").update(patch).eq("id", id);
-  if(error) throw error;
-}
-
-async function deleteTask(id){
-  const { error } = await supabase.from("tasks").delete().eq("id", id);
-  if(error) throw error;
-}
-
-/** =========================
- *  Realtime
- *  ========================= */
-function teardownRealtime(){
-  if(realtimeChannel){
-    supabase.removeChannel(realtimeChannel);
-    realtimeChannel = null;
-  }
-}
-
-function setupRealtime(){
-  teardownRealtime();
-  realtimeChannel = supabase
-    .channel("tasks_changes")
-    .on("postgres_changes",
-      { event:"*", schema:"public", table:"tasks", filter:`plan_id=eq.${plan.id}` },
-      async ()=> {
-        await loadTasks();
-        render();
-      }
-    )
-    .subscribe();
-}
-
-/** =========================
- *  Rendering (table + calendar + templates)
- *  ========================= */
-function badge(st){
-  if(st==="done") return '<span class="pill ok">Fait</span>';
-  if(st==="doing") return '<span class="pill warn">En cours</span>';
-  if(st==="blocked") return '<span class="pill bad">Bloqué</span>';
-  return '<span class="pill">À faire</span>';
-}
-
-function updatePill(){
-  const blocked = tasks.filter(t=>t.status==="blocked").length;
-  const todo = tasks.filter(t=>t.status!=="done").length;
-  const p = $("pill");
-  if(blocked){ p.className="pill bad"; p.textContent = blocked + " bloqué(s)"; return; }
-  if(todo===0){ p.className="pill ok"; p.textContent = "Tout est fait"; return; }
-  p.className="pill warn"; p.textContent = todo + " à traiter";
-}
-
-function computeStage(){
-  const terrain = tasks.find(t=>t.type==="terrain" && (t.title||"").toLowerCase().includes("email terrain"));
-  const contract = tasks.find(t=>t.type==="contract");
-  const pilot = tasks.find(t=>t.type==="pilot");
-  let st = "Terrain → Email OK";
-  if(terrain && terrain.status==="done") st = "Sponsors → Calls / Signature";
-  if(contract && contract.status==="done") st = "Hardening → 8 semaines";
-  if(pilot && pilot.status==="doing") st = "Pilote → en cours";
-  if(pilot && pilot.status==="done") st = "Rapport → puis LOI";
-  $("kStage").textContent = st;
-}
-
-function renderTable(){
-  const fs = $("fStatus").value;
-  const ft = $("fType").value;
-
-  let rows = [...tasks];
-  if(fs !== "all") rows = rows.filter(t=>t.status===fs);
-  if(ft !== "all") rows = rows.filter(t=>t.type===ft);
-
-  const prRank = {p1:0,p2:1,p3:2};
-  rows.sort((a,b)=>{
-    const da = a.due || "9999-12-31";
-    const db = b.due || "9999-12-31";
-    if(da<db) return -1;
-    if(da>db) return 1;
-    return (prRank[a.priority]??9)-(prRank[b.priority]??9);
-  });
-
-  $("tbody").innerHTML = rows.map(t=>{
-    const meta = TYPE[t.type] || {l:t.type, c:"#7aa2ff"};
-    const dot = `<span class="dot" style="background:${meta.c}"></span>`;
-    return `<tr>
-      <td>
-        <div style="font-weight:900">${dot}${esc(t.title)}</div>
-        <div class="tiny">Priorité: <span class="mono">${(t.priority||"p2").toUpperCase()}</span></div>
-      </td>
-      <td><span class="pill">${meta.l}</span></td>
-      <td>${esc(t.owner||"—")}</td>
-      <td class="mono">${t.due||"—"}</td>
-      <td>${badge(t.status)}</td>
-      <td><div class="tiny">${esc((t.notes||"").slice(0,180))}${(t.notes||"").length>180?"…":""}</div></td>
-      <td style="text-align:right">
-        <button class="btnlink" onclick="openEdit('${t.id}')">Éditer</button>
-        <button class="btnlink" onclick="toggleDone('${t.id}')">${t.status==="done"?"↩︎":"✓"}</button>
-      </td>
-    </tr>`;
-  }).join("");
-}
-
-function renderCalendar(){
-  const m = new Date(calMonth); m.setDate(1);
-  $("calLabel").textContent = m.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
-
-  const dow = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
-  $("dow").innerHTML = dow.map(x=>`<div class="dow">${x}</div>`).join("");
-
-  const y=m.getFullYear(), mo=m.getMonth();
-  const first=new Date(y,mo,1);
-  const offset=(first.getDay()+6)%7;
-  const dim=new Date(y,mo+1,0).getDate();
-  const prevDim=new Date(y,mo,0).getDate();
-
-  const cells=[];
-  for(let i=0;i<offset;i++){
-    const day=prevDim-offset+1+i;
-    const d=new Date(y,mo-1,day);
-    cells.push({iso:d.toISOString().slice(0,10), day, out:true});
-  }
-  for(let d=1; d<=dim; d++){
-    const dt=new Date(y,mo,d);
-    cells.push({iso:dt.toISOString().slice(0,10), day:d, out:false});
-  }
-  while(cells.length%7!==0){
-    const idx=cells.length-(offset+dim)+1;
-    const dt=new Date(y,mo+1,idx);
-    cells.push({iso:dt.toISOString().slice(0,10), day:idx, out:true});
-  }
-
-  const by = {};
-  for(const t of tasks){
-    if(!t.due) continue;
-    (by[t.due] ||= []).push(t);
-  }
-
-  $("cal").innerHTML = cells.map(c=>{
-    const ev=(by[c.iso]||[]).slice(0,3).map(t=>{
-      const meta = TYPE[t.type] || {l:t.type,c:"#7aa2ff"};
-      const st=t.status==="done"?"✓":t.status==="blocked"?"!":t.status==="doing"?"…":"•";
-      return `<div class="event" onclick="openEdit('${t.id}')" title="${esc(t.title)}">
-        <span class="dot" style="background:${meta.c}"></span>
-        <span class="mono"><b>${st}</b></span>
-        ${esc(shorten(t.title, 44))}
-      </div>`;
-    }).join("");
-    return `<div class="day ${c.out?"out":""}">
-      <div class="daynum">${c.day}</div>
-      ${ev}
-    </div>`;
-  }).join("");
-}
-
-function fillTemplates(){
-  const region = $("pilotRegion").value || "Catalogne";
-  const onsite = $("onsiteOwner").value || "CTO in-site";
-  const cash = $("targetCash").value || "50 000 €";
-
-  $("tplTerrain").textContent =
-`1) Nous développons ARKEO, un compagnon de robotique sociale pour seniors, pour soutenir le lien et l’engagement au quotidien.
-2) Prototype fonctionnel ; nous cherchons un site en ${region} pour un pilote in-site court (2–3 semaines).
-3) Pilote encadré : un référent côté site, créneaux définis, et ${onsite}.
-4) Statut assumé : prototype/beta — objectif = acceptabilité, usage, points de fiabilité à corriger.
-5) Mesures simples : acceptabilité (continuer oui/non), valeur perçue (1–5), incidents/temps de reprise — rapport remis au site.
-6) Prochain pas : confirmation par email (site + référent + dates + “beta accepté”).`;
-
-  $("tplSponsor").textContent =
-`1) Nous déployons un compagnon de robotique sociale pour seniors.
-2) Prototype fonctionnel + terrain activable en ${region} (via Siel Bleu).
-3) Programme borné : 8 semaines hardening “MVP pilotable”, puis pilote in-site 2–3 semaines, puis rapport.
-4) Inclus : continuité (spares/reprise <72h) + baseline privacy/safety (consentement, règles data, procédure incident).
-5) Budget demandé : ${cash} (co-financé en nature par l’équipe).
-6) Seriez-vous disponible 30 minutes pour valider l’éligibilité et la possibilité de sponsoring ?`;
-
-  $("tplEmail").textContent =
-`Objet : Confirmation pilote ARKEO — [Site], [dates]
-
-Bonjour [Nom],
-
-Suite à notre échange, voici le récapitulatif pour confirmation :
-• Site : [Nom du site], [Ville – Catalogne]
-• Référent opérationnel : [Nom, fonction, téléphone/email]
-• Fenêtre : [date début] → [date fin] (2–3 semaines)
-• Statut : prototype/beta accepté ; opérateur ARKEO présent sur place ; créneaux définis.
-
-Pouvez-vous répondre “OK” à ce message pour confirmer ?
-Merci,
-[Prénom]`;
-
-  $("tplCTA").textContent =
-`CTA : “Auriez-vous 30 minutes cette semaine pour valider si vous pouvez sponsoriser le programme 50k (hardening 8 semaines + pilote in-site + rapport) ?”`;
-}
-
-function render(){
-  updatePill();
-  computeStage();
-  renderTable();
-  renderCalendar();
-  fillTemplates();
-}
-
-/** =========================
- *  Modal handling
- *  ========================= */
-let editId = null;
-
-function openModal(){
-  show($("modal"));
-}
-function closeModal(){
-  hide($("modal"));
-}
-window.openEdit = function(id){
-  const t = tasks.find(x=>x.id===id);
-  if(!t) return;
-  editId = id;
-  $("mTitleLbl").textContent = "Éditer tâche";
-  $("mTitle").value = t.title || "";
-  $("mType").value = t.type || "pack";
-  $("mOwner").value = t.owner || "";
-  $("mDue").value = t.due || "";
-  $("mStatus").value = t.status || "todo";
-  $("mPr").value = t.priority || "p2";
-  $("mNotes").value = t.notes || "";
-  $("mDelete").style.display = "inline-block";
-  openModal();
-};
-
-function openNew(){
-  editId = null;
-  $("mTitleLbl").textContent = "Nouvelle tâche";
-  $("mTitle").value = "";
-  $("mType").value = "pack";
-  $("mOwner").value = "";
-  $("mDue").value = "";
-  $("mStatus").value = "todo";
-  $("mPr").value = "p2";
-  $("mNotes").value = "";
-  $("mDelete").style.display = "none";
-  openModal();
-}
-
-async function saveModal(){
-  const t = {
-    title: $("mTitle").value.trim(),
-    type: $("mType").value,
-    owner: $("mOwner").value.trim(),
-    due: $("mDue").value,
-    status: $("mStatus").value,
-    priority: $("mPr").value,
-    notes: $("mNotes").value.trim(),
-  };
-  if(!t.title){ toast("Titre requis."); return; }
-
-  try{
-    if(editId){
-      await updateTask(editId, t);
-      toast("Tâche mise à jour.");
-    }else{
-      await createTask(t);
-      toast("Tâche ajoutée.");
-    }
-    closeModal();
-    // realtime will refresh; but also refresh now for snappiness:
-    await loadTasks(); render();
-  }catch(e){
-    toast("Erreur: " + (e.message || e));
-  }
-}
-
-async function delModal(){
-  if(!editId) return;
-  try{
-    await deleteTask(editId);
-    toast("Tâche supprimée.");
-    closeModal();
-    await loadTasks(); render();
-  }catch(e){
-    toast("Erreur: " + (e.message || e));
-  }
-}
-
-window.toggleDone = async function(id){
-  const t = tasks.find(x=>x.id===id);
-  if(!t) return;
-  const next = (t.status === "done") ? "todo" : "done";
-  try{
-    await updateTask(id, { status: next });
-    await loadTasks(); render();
-  }catch(e){
-    toast("Erreur: " + (e.message || e));
-  }
-};
-
-/** =========================
- *  Boot
- *  ========================= */
-async function boot(){
-  // UI binds
-  $("btnSendLink").addEventListener("click", sendMagicLink);
-  $("btnLogout").addEventListener("click", logout);
-  $("btnOpenLogin").addEventListener("click", ()=> { window.scrollTo({top:0, behavior:"smooth"}); });
-  $("btnAdd").addEventListener("click", openNew);
-
-  $("mClose").addEventListener("click", closeModal);
-  $("mSave").addEventListener("click", saveModal);
-  $("mDelete").addEventListener("click", delModal);
-
-  $("modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") closeModal(); });
-
-  $("fStatus").addEventListener("change", render);
-  $("fType").addEventListener("change", render);
-
-  $("prev").addEventListener("click", ()=>{ calMonth.setMonth(calMonth.getMonth()-1); calMonth.setDate(1); renderCalendar(); });
-  $("next").addEventListener("click", ()=>{ calMonth.setMonth(calMonth.getMonth()+1); calMonth.setDate(1); renderCalendar(); });
-
-  // Copy buttons
-  document.querySelectorAll("[data-copy]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const sel = btn.getAttribute("data-copy");
-      const el = document.querySelector(sel);
-      if(!el) return;
-      await navigator.clipboard.writeText(el.textContent);
-      toast("Copié.");
-    });
-  });
-
-  // Auth state
-  const { data: sess } = await supabase.auth.getSession();
-  if(sess?.session){
-    await onLoggedIn(sess.session.user);
+supabaseClient.auth.getSession().then(({ data })=>{
+  if(data.session){
+    showLoggedIn(data.session.user);
   }else{
-    setLoggedOutUI();
+    showLoggedOut();
   }
+});
 
-  supabase.auth.onAuthStateChange(async (event, session)=>{
-    if(session?.user){
-      await onLoggedIn(session.user);
-    }else{
-      setLoggedOutUI();
-    }
-  });
-}
-
-async function onLoggedIn(user){
-  setLoggedInUI(user.email);
-
-  try{
-    plan = await getOrCreatePlan();
-    $("planName").value = plan.name + " (" + plan.id.slice(0,8) + "…)";
-
-    await ensureSeedIfEmpty(plan.id);
-    await loadTasks();
-
-    setupRealtime();
-    render();
-
-  }catch(e){
-    toast("Erreur init: " + (e.message || e));
-    console.error(e);
+supabaseClient.auth.onAuthStateChange((_event, session)=>{
+  if(session?.user){
+    showLoggedIn(session.user);
+  }else{
+    showLoggedOut();
   }
-}
-
-boot();
+});
 </script>
+
 </body>
 </html>
