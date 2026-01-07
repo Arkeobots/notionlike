@@ -98,7 +98,7 @@ textarea{min-height:90px;resize:vertical}
     <div class="hd">
       <div>
         <div class="section-title">Connexion</div>
-        <div class="tiny">Magic link email (recommandé). Utilise l’email de l’équipe (Erwan/Thomas…).</div>
+        <div class="tiny">Magic link email. Accès: @arkeobots.com + whitelist.</div>
       </div>
       <span class="pill warn">Auth Supabase</span>
     </div>
@@ -106,7 +106,7 @@ textarea{min-height:90px;resize:vertical}
       <div class="row">
         <div class="field" style="flex:2">
           <label>Email</label>
-          <input id="loginEmail" placeholder="prenom@domaine.com"/>
+          <input id="loginEmail" placeholder="prenom@arkeobots.com"/>
         </div>
         <div class="field">
           <label>&nbsp;</label>
@@ -234,8 +234,8 @@ textarea{min-height:90px;resize:vertical}
   </div>
 
   <div class="footer">
-    <div>🔁 Supabase DB + Auth + Realtime · 1 plan entreprise</div>
-    <div class="mono">arkeoplan-supabase-v2</div>
+    <div>🔁 Supabase DB + Auth + Realtime · 1 plan entreprise (auto)</div>
+    <div class="mono">arkeoplan-supabase-v3</div>
   </div>
 
 </main>
@@ -314,8 +314,8 @@ textarea{min-height:90px;resize:vertical}
 const SUPABASE_URL = "https://bejbipoebjzlsugyclqw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_TiMTmX-uqin2PVlsJsjGuw_b11OFSy8";
 
-/** 1 plan entreprise (ton plan existant) */
-const TEAM_PLAN_ID = "9a8874e0-11e5-461f-a015-716818e00dfa";
+/* 1 plan entreprise identifié par NOM (plus robuste qu’un UUID hardcodé) */
+const TEAM_PLAN_NAME = "ARKEO Team";
 
 /* ============== CLIENT =================== */
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -343,14 +343,24 @@ const TYPE={
   report:{l:"Rapport",c:"#7aa2ff"},
   loi:{l:"LOI",c:"#7ef0c2"},
 };
-let tasks=[];
-let calMonth=(()=>{const d=new Date();d.setDate(1);d.setHours(0,0,0,0);return d;})();
-let realtimeChannel=null;
 
-/* ============== AUTH ===================== */
+let teamPlanId = null;
+let tasks = [];
+let calMonth = (()=>{const d=new Date();d.setDate(1);d.setHours(0,0,0,0);return d;})();
+let realtimeChannel = null;
+
+/* ============== AUTH UI ================== */
 async function sendMagicLink(){
   const email=$("loginEmail").value.trim();
   if(!email){toast("Email requis.");return;}
+
+  // On ne bloque pas côté client, car les emails whitelist (gmail) doivent pouvoir se connecter.
+  // On met juste un avertissement si ce n'est pas @arkeobots.com.
+  if(!email.toLowerCase().endsWith("@arkeobots.com")){
+    const ok = confirm("Email hors @arkeobots.com.\nIl doit être en whitelist côté DB pour accéder.\n\nContinuer ?");
+    if(!ok) return;
+  }
+
   const { error } = await supabaseClient.auth.signInWithOtp({
     email,
     options:{ emailRedirectTo: window.location.href }
@@ -387,25 +397,60 @@ function setLoggedInUI(email){
   $("grid").classList.remove("hide");
 }
 
-/* ============== PLAN + MEMBERSHIP ======== */
-async function ensureMember(user){
+/* ============== ACCESS CHECK ============= */
+async function assertAllowedUser(){
+  // Calls SQL function: public.is_allowed_user()
+  const { data, error } = await supabaseClient.rpc("is_allowed_user");
+  if(error) throw error;
+  if(data !== true){
+    // on force un logout pour éviter une UI "vide"
+    await supabaseClient.auth.signOut();
+    setLoggedOutUI();
+    throw new Error("Accès refusé: email non autorisé (@arkeobots.com + whitelist uniquement).");
+  }
+}
+
+/* ============== PLAN (get or create by name) ============= */
+async function getOrCreateTeamPlan(user){
+  // try find by name
+  const { data: found, error: fErr } = await supabaseClient
+    .from("plans")
+    .select("*")
+    .eq("name", TEAM_PLAN_NAME)
+    .limit(1);
+
+  if(fErr) throw fErr;
+  if(found && found[0]) return found[0];
+
+  // create
+  const { data: created, error: cErr } = await supabaseClient
+    .from("plans")
+    .insert({ name: TEAM_PLAN_NAME, created_by: user.id })
+    .select()
+    .single();
+  if(cErr) throw cErr;
+
+  return created;
+}
+
+async function ensureMember(planId, user){
   const { data: mem, error: mErr } = await supabaseClient
     .from("plan_members")
     .select("*")
-    .eq("plan_id", TEAM_PLAN_ID)
+    .eq("plan_id", planId)
     .eq("user_id", user.id)
     .limit(1);
 
   if(mErr) throw mErr;
-
   if(!mem || mem.length === 0){
     const { error: insErr } = await supabaseClient
       .from("plan_members")
-      .insert({ plan_id: TEAM_PLAN_ID, user_id: user.id, role: "member" });
+      .insert({ plan_id: planId, user_id: user.id, role: "member" });
     if(insErr) throw insErr;
   }
 }
 
+/* ============== SEED TASKS ============= */
 function nextMondayISO(){
   const d=new Date();
   const day=d.getDay();
@@ -414,15 +459,13 @@ function nextMondayISO(){
   d.setHours(0,0,0,0);
   return d.toISOString().slice(0,10);
 }
-
 function addDays(iso,days){
   const d=new Date(iso+"T00:00:00");
   d.setDate(d.getDate()+days);
   return d.toISOString().slice(0,10);
 }
-
 function seedTasksForPlan(planId){
-  const start = nextMondayISO();
+  const start = $("startDate").value || nextMondayISO();
   const defaults = [
     {title:"Obtenir email terrain (site + référent + dates + 'beta accepté') via Siel Bleu", type:"terrain", owner:"Erwan / Siel Bleu", due:addDays(start,3), status:"todo", priority:"p1", notes:"Sortie: email 'OK' du site. Sans ça, pas de sponsoring efficace."},
     {title:"Plan B terrain discret (1 site alternatif en Catalogne)", type:"terrain", owner:"Erwan", due:addDays(start,7), status:"todo", priority:"p2", notes:"Ne pas dépendre d’un seul contact."},
@@ -453,14 +496,15 @@ async function ensureSeedIfEmpty(planId){
   const seed = seedTasksForPlan(planId);
   const { error: insErr } = await supabaseClient.from("tasks").insert(seed);
   if(insErr) throw insErr;
+  toast("Plan initial créé (tâches seed).");
 }
 
-/* ============== TASKS CRUD =============== */
+/* ============== TASKS CRUD ============= */
 async function loadTasks(){
   const { data, error } = await supabaseClient
     .from("tasks")
     .select("*")
-    .eq("plan_id", TEAM_PLAN_ID)
+    .eq("plan_id", teamPlanId)
     .order("due", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true });
 
@@ -470,7 +514,7 @@ async function loadTasks(){
 
 async function createTask(t){
   const payload = {
-    plan_id: TEAM_PLAN_ID,
+    plan_id: teamPlanId,
     title: t.title,
     type: t.type,
     owner: t.owner || null,
@@ -495,20 +539,19 @@ async function deleteTask(id){
   if(error) throw error;
 }
 
-/* ============== REALTIME ================= */
+/* ============== REALTIME ============= */
 function teardownRealtime(){
   if(realtimeChannel){
     supabaseClient.removeChannel(realtimeChannel);
     realtimeChannel = null;
   }
 }
-
 function setupRealtime(){
   teardownRealtime();
   realtimeChannel = supabaseClient
-    .channel("tasks_changes_"+TEAM_PLAN_ID)
+    .channel("tasks_changes_" + teamPlanId)
     .on("postgres_changes",
-      { event:"*", schema:"public", table:"tasks", filter:`plan_id=eq.${TEAM_PLAN_ID}` },
+      { event:"*", schema:"public", table:"tasks", filter:`plan_id=eq.${teamPlanId}` },
       async ()=> {
         await loadTasks();
         render();
@@ -517,14 +560,13 @@ function setupRealtime(){
     .subscribe();
 }
 
-/* ============== RENDER =================== */
+/* ============== RENDER ============= */
 function badge(st){
   if(st==="done") return '<span class="pill ok">Fait</span>';
   if(st==="doing") return '<span class="pill warn">En cours</span>';
   if(st==="blocked") return '<span class="pill bad">Bloqué</span>';
   return '<span class="pill">À faire</span>';
 }
-
 function updatePill(){
   const blocked = tasks.filter(t=>t.status==="blocked").length;
   const todo = tasks.filter(t=>t.status!=="done").length;
@@ -533,7 +575,6 @@ function updatePill(){
   if(todo===0){ p.className="pill ok"; p.textContent = "Tout est fait"; return; }
   p.className="pill warn"; p.textContent = todo + " à traiter";
 }
-
 function computeStage(){
   const terrain = tasks.find(t=>t.type==="terrain" && (t.title||"").toLowerCase().includes("email terrain"));
   const contract = tasks.find(t=>t.type==="contract");
@@ -684,7 +725,7 @@ function render(){
   fillTemplates();
 }
 
-/* ============== MODAL ==================== */
+/* ============== MODAL ============= */
 let editId = null;
 
 function openModal(){ $("modal").classList.remove("hide"); }
@@ -774,23 +815,34 @@ window.toggleDone = async function(id){
   }
 };
 
-/* ============== BOOT ===================== */
+/* ============== BOOT ============= */
 async function onLoggedIn(user){
   setLoggedInUI(user.email);
 
   try{
-    $("planMeta").textContent = `Plan entreprise: ${TEAM_PLAN_ID} · user: ${user.id.slice(0,8)}…`;
+    // 1) DB access check (arkeobots.com + whitelist)
+    await assertAllowedUser();
 
-    await ensureMember(user);
-    await ensureSeedIfEmpty(TEAM_PLAN_ID);
+    // 2) get or create company plan
+    const plan = await getOrCreateTeamPlan(user);
+    teamPlanId = plan.id;
 
+    $("planMeta").textContent = `Plan: ${TEAM_PLAN_NAME} · ${teamPlanId.slice(0,8)}… · user: ${user.id.slice(0,8)}…`;
+
+    // 3) ensure membership
+    await ensureMember(teamPlanId, user);
+
+    // 4) seed if empty
+    await ensureSeedIfEmpty(teamPlanId);
+
+    // 5) load + realtime + render
     await loadTasks();
     setupRealtime();
     render();
 
   }catch(e){
     console.error(e);
-    toast("INIT ERROR: " + (e.message || e));
+    toast(e.message || String(e));
   }
 }
 
